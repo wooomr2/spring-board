@@ -2,11 +2,14 @@ package board.article.api;
 
 import board.article.dto.response.ArticlePageResponse;
 import board.article.dto.response.ArticleResponse;
+import board.article.entity.Article;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.junit.jupiter.api.Test;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.web.client.RestClient;
 
+import java.util.List;
 import java.util.Objects;
 
 public class ArticleApiTest {
@@ -92,6 +95,32 @@ public class ArticleApiTest {
         System.out.println("count = " + Objects.requireNonNull(response).getArticleCount());
         for (ArticleResponse article : response.getArticles()) {
             System.out.println("article = " + article);
+        }
+    }
+
+    @Test
+    void readAllInfiniteScrollTest() {
+        List<Article> articles = restClient.get()
+                .uri("/v1/articles/infinite-scroll?boardId=1&pageSize=5")
+                .retrieve()
+                .body(new ParameterizedTypeReference<List<Article>>() {
+                });
+
+        for (Article article : articles) {
+            System.out.println("article = " + article);
+        }
+
+        long lastArticleId = articles.getLast().getArticleId();
+        System.out.println("last article id = " + lastArticleId);
+
+        List<Article> nextArticles = restClient.get()
+                .uri("/v1/articles/infinite-scroll?boardId=1&pageSize=5&lastArticleId={lastArticleId}", lastArticleId)
+                .retrieve()
+                .body(new ParameterizedTypeReference<List<Article>>() {
+                });
+
+        for (Article article : nextArticles) {
+            System.out.println("last article = " + article);
         }
     }
 }

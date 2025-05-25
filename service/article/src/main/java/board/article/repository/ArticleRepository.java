@@ -21,7 +21,7 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
                     "    order by article_id desc " +
                     "    limit :limit offset :offset " +
                     " ) t " +
-                    " left join article a on t.article_id = a.article_id"
+                    " left join article a on t.article_id = a.article_id "
             ,
             nativeQuery = true
     )
@@ -32,15 +32,44 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
 
     @Query(
             value = " select count(*) " +
-                    " from (" +
-                    "   select article_id" +
-                    "   from article" +
-                    "   where board_id = :boardId" +
-                    "   limit :limit" +
-                    " ) t"
+                    " from ( " +
+                    "   select article_id " +
+                    "   from article " +
+                    "   where board_id = :boardId " +
+                    "   limit :limit " +
+                    " ) t "
             ,
             nativeQuery = true
     )
     Long count(@Param("boardId") Long boardId,
                @Param("limit") Long limit);
+
+    @Query(
+            value = " select article_id, title, content, board_id, writer_id, " +
+                    "        created_at, modified_at " +
+                    " from article" +
+                    " where board_id = :boardId " +
+                    " order by article_id desc " +
+                    " limit :limit "
+            ,
+            nativeQuery = true)
+    List<Article> findAllInfiniteScroll(
+            @Param("boardId") Long boardId,
+            @Param("limit") Long limit
+    );
+
+    @Query(
+            value = " select article_id, title, content, board_id, writer_id, " +
+                    "        created_at, modified_at " +
+                    " from article " +
+                    " where board_id = :boardId and article_id < :lastArticleId " +
+                    " order by article_id desc " +
+                    " limit :limit "
+            ,
+            nativeQuery = true)
+    List<Article> findAllInfiniteScroll(
+            @Param("boardId") Long boardId,
+            @Param("limit") Long limit,
+            @Param("lastArticleId") Long lastArticleId
+    );
 }

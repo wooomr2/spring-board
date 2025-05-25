@@ -35,3 +35,110 @@ limit = (((n – 1) / k) + 1) * m * k + 1
 • n=12, m=30, k=10
  • (((12 - 1) / 10) + 1) * 30 * 10 + 1 = 601
 ``````
+
+
+[//]: # (ParameterizedTypeReference)
+```
+✅ 1. 왜 필요한가? (제네릭 타입 소거 문제)
+Java는 **타입 소거(Type Erasure)**라는 개념 때문에 런타임에는 제네릭 타입 정보가 사라집니다.
+
+예를 들어 아래처럼 List<String>을 전달한다고 해도, 런타임에는 그냥 List로만 인식됩니다.
+
+java
+복사
+편집
+List<String> list = new ArrayList<>();
+Type type = list.getClass().getGenericSuperclass();  // => List
+이 때문에 List<String> 같은 복잡한 타입을 런타임에 유지하거나 전달하는 것이 어렵습니다.
+
+🔍 2. ParameterizedTypeReference<T>란?
+📌 정의
+Spring의 ParameterizedTypeReference<T>는 제네릭 타입을 런타임에 유지할 수 있도록 해주는 추상 클래스입니다.
+
+내부적으로는 Java의 리플렉션(Reflection)을 활용해서 제네릭 타입 정보를 보존합니다.
+
+📦 어디에 쓰는가?
+RestTemplate이나 WebClient로 HTTP 응답을 받을 때
+
+제네릭 타입을 Type 객체로 넘길 때
+
+타입 정보를 명확히 전달해야 할 때
+
+⚙️ 3. 내부 동작 원리
+핵심 구조
+java
+복사
+편집
+public abstract class ParameterizedTypeReference<T> {
+    private final Type type;
+
+    protected ParameterizedTypeReference() {
+        Type superclass = getClass().getGenericSuperclass();
+        this.type = ((ParameterizedType) superclass).getActualTypeArguments()[0];
+    }
+
+    public Type getType() {
+        return this.type;
+    }
+}
+익명 서브클래스를 만들면 T의 타입이 getGenericSuperclass()를 통해 잡힙니다.
+
+이걸 통해 List<String>, Map<String, User> 같은 제네릭 타입이 Type 객체로 보존됩니다.
+
+💡 4. 실전 사용법 예제
+예제 1: RestTemplate으로 제네릭 타입 응답 받기
+java
+복사
+편집
+RestTemplate restTemplate = new RestTemplate();
+
+ResponseEntity<List<ArticleResponse>> response =
+    restTemplate.exchange(
+        "http://api.example.com/articles",
+        HttpMethod.GET,
+        null,
+        new ParameterizedTypeReference<List<ArticleResponse>>() {}
+    );
+
+List<ArticleResponse> articles = response.getBody();
+익명 클래스를 생성하면서 <List<ArticleResponse>> 타입 정보를 캡처함
+
+예제 2: WebClient에서도 동일
+java
+복사
+편집
+WebClient client = WebClient.create();
+
+Mono<List<UserDto>> result = client.get()
+    .uri("/users")
+    .retrieve()
+    .bodyToMono(new ParameterizedTypeReference<List<UserDto>>() {});
+예제 3: 직접 Type을 가져와서 사용
+java
+복사
+편집
+ParameterizedTypeReference<Map<String, List<User>>> typeRef =
+    new ParameterizedTypeReference<Map<String, List<User>>>() {};
+
+Type type = typeRef.getType();
+System.out.println(type);  // java.util.Map<java.lang.String, java.util.List<User>>
+⚠️ 5. 주의사항
+항목	설명
+익명 클래스로 생성해야 타입이 캡처됨	new ParameterizedTypeReference<>() {} ← 꼭 중괄호 필요
+타입 정보를 유지하고 싶은 곳에만 사용	런타임이 중요한 곳에서만 필요 (리플렉션 기반 작업 등)
+클래스 상속 구조가 복잡할수록 작동에 주의	상속 깊이가 깊어지면 제네릭 타입 추출이 실패할 수 있음
+
+🧠 6. 요약
+항목	설명
+클래스명	org.springframework.core.ParameterizedTypeReference<T>
+목적	런타임에 제네릭 타입 정보를 보존하고 전달하기 위함
+사용 예	RestTemplate, WebClient, 리플렉션 기반 Type 추론
+내부 구현	익명 서브클래스와 getGenericSuperclass() 활용
+주의	반드시 익명 서브클래스로 생성해야 타입이 추론됨
+
+📌 결론
+ParameterizedTypeReference<T>는 Java의 제네릭 타입 소거 문제를 우회해
+복잡한 제네릭 타입 정보를 런타임까지 유지할 수 있도록 만들어주는 유틸리티입니다.
+
+프레임워크 내부뿐 아니라, 우리가 직접 만든 유틸 도구, HTTP 통신, Type 추론이 필요한 곳에서도 매우 유용하게 쓰입니다!
+````
