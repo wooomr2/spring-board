@@ -25,8 +25,9 @@ public class TestDataInitializer {
     Snowflake snowflake = new Snowflake();
     CountDownLatch latch = new CountDownLatch(EXECUTE_COUNT);
 
-    static final int BULK_INSERT_SIZE = 1000;
-    static final int EXECUTE_COUNT = 1000000;
+    // totalData = BULK_INSERT_SIZE * EXECUTE_COUNT = 100,000,000
+    static final int BULK_INSERT_SIZE = 2000;
+    static final int EXECUTE_COUNT = 50000;
 
     @Test
     void init() throws InterruptedException {

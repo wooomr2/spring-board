@@ -1,10 +1,13 @@
 package board.article.api;
 
+import board.article.dto.response.ArticlePageResponse;
 import board.article.dto.response.ArticleResponse;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.client.RestClient;
+
+import java.util.Objects;
 
 public class ArticleApiTest {
     RestClient restClient = RestClient.create("http://localhost:9000");
@@ -77,5 +80,18 @@ public class ArticleApiTest {
                 .retrieve()
                 .body(Void.class);
         System.out.println("Article deleted successfully.");
+    }
+
+    @Test
+    void readAllTest() {
+        ArticlePageResponse response = restClient.get()
+                .uri("/v1/articles?boardId=1&pageSize=30&page=50000")
+                .retrieve()
+                .body(ArticlePageResponse.class);
+
+        System.out.println("count = " + Objects.requireNonNull(response).getArticleCount());
+        for (ArticleResponse article : response.getArticles()) {
+            System.out.println("article = " + article);
+        }
     }
 }
