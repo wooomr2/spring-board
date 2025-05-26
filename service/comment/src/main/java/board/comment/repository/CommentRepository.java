@@ -14,7 +14,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
                 from (
                     select comment_id
                     from comment
-                    where article_id = :article_id and parent_comment_id = :parentCommentId
+                    where article_id = :articleId and parent_comment_id = :parentCommentId
                     limit :limit
                 ) t
             """,

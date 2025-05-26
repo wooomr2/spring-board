@@ -1,6 +1,6 @@
-package board.article.data;
+package board.comment.data;
 
-import board.article.entity.Article;
+import board.comment.entity.Comment;
 import board.common.snowflake.Snowflake;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -14,7 +14,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 @SpringBootTest
-public class TestDataInitializer {
+public class CommentDataInitializerTest {
 
     @PersistenceContext
     EntityManager em;
@@ -47,17 +47,18 @@ public class TestDataInitializer {
 
     private void insert() {
         tx.executeWithoutResult(status -> {
+            Comment prev = null;
             for (int ii = 0; ii < BULK_INSERT_SIZE; ii++) {
-                Article article = Article.create(
+                Comment comment = Comment.create(
                         snowflake.nextId(),
-                        "title-" + snowflake.nextId(),
                         "content-" + snowflake.nextId(),
+                        ii % 2 == 0 ? null : prev.getCommentId(),
                         1L,
                         1L
                 );
-                em.persist(article);
+                prev = comment;
+                em.persist(comment);
             }
         });
     }
-
 }

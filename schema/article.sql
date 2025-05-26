@@ -10,6 +10,6 @@ create table article.article (
        modified_at datetime NOT NULL
 );
 
-create index idx_board_id_article_id on article.article(board_id asc, article_id desc)
+create index idx_board_id_article_id on article.article(board_id asc, article_id desc);
 
 
