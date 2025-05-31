@@ -27,7 +27,7 @@ public class CommentDataInitializerTest {
 
     // totalData = BULK_INSERT_SIZE * EXECUTE_COUNT = 100,000,000
     static final int BULK_INSERT_SIZE = 2000;
-    static final int EXECUTE_COUNT = 50000;
+    static final int EXECUTE_COUNT = 5000;
 
     @Test
     void init() throws InterruptedException {

@@ -1,13 +1,17 @@
 package board.comment.service;
 
 import board.comment.dto.request.CommentCreateRequest;
+import board.comment.dto.response.CommentPageResponse;
 import board.comment.dto.response.CommentResponse;
 import board.comment.entity.Comment;
 import board.comment.repository.CommentRepository;
 import board.common.snowflake.Snowflake;
+import board.common.util.PageLimitCalculator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 import static java.util.function.Predicate.not;
 
@@ -80,5 +84,23 @@ public class CommentService {
                     .filter(not(this::_hasChlidren))
                     .ifPresent(this::_delete);
         }
+    }
+
+    public CommentPageResponse readAll(Long articleId, Long page, Long pageSize) {
+        return CommentPageResponse.of(
+                commentRepository.findAll(articleId, (page - 1) * pageSize, pageSize)
+                        .stream()
+                        .map(CommentResponse::from)
+                        .toList(),
+                commentRepository.count(articleId, PageLimitCalculator.calculatePageLimit(page, pageSize, 10L))
+        );
+    }
+
+    public List<CommentResponse> readAll(Long articleId, Long lastParentCommentId, Long lastCommentId, Long limit) {
+        List<Comment> comments = (lastParentCommentId == null || lastCommentId == null) ?
+                commentRepository.findAllInfiniteScroll(articleId, limit) :
+                commentRepository.findAllInfiniteScroll(articleId, lastParentCommentId, lastCommentId, limit);
+
+        return comments.stream().map(CommentResponse::from).toList();
     }
 }

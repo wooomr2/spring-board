@@ -1,8 +1,8 @@
-package board.article.service;
+package board.common.util;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 class PageLimitCalculatorTest {
 

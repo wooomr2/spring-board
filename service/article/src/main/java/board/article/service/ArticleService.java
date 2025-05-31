@@ -7,6 +7,7 @@ import board.article.dto.response.ArticleResponse;
 import board.article.entity.Article;
 import board.article.repository.ArticleRepository;
 import board.common.snowflake.Snowflake;
+import board.common.util.PageLimitCalculator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

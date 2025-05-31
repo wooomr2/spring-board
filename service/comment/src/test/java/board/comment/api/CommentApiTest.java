@@ -1,10 +1,14 @@
 package board.comment.api;
 
+import board.comment.dto.response.CommentPageResponse;
 import board.comment.dto.response.CommentResponse;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.junit.jupiter.api.Test;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.web.client.RestClient;
+
+import java.util.List;
 
 public class CommentApiTest {
 
@@ -60,5 +64,47 @@ public class CommentApiTest {
                 .uri("/v1/comments/{commentId}", 185308446285692928L)
                 .retrieve()
                 .toBodilessEntity();
+    }
+
+    @Test
+    void readAll() {
+        CommentPageResponse response = restClient.get()
+                .uri("v1/comments?articleId=1&page=50000&pageSize=30")
+                .retrieve()
+                .body(CommentPageResponse.class);
+
+        System.out.println(response.getCommentCount());
+        for (CommentResponse comment : response.getComments()) {
+            System.out.println(comment.getCommentId());
+        }
+    }
+
+    @Test
+    void readAllInfiniteScroll() {
+        List<CommentResponse> response1 = restClient.get()
+                .uri("v1/comments/infinite-scroll?articleId=1&pageSize=30")
+                .retrieve()
+                .body(new ParameterizedTypeReference<List<CommentResponse>>() {
+                });
+
+        System.out.println("first Page of Infinite Scroll");
+        for (CommentResponse comment : response1) {
+            System.out.println(comment);
+        }
+
+        Long lastParentCommentId = response1.getLast().getParentCommentId();
+        Long lastCommentId = response1.getLast().getCommentId();
+
+        List<CommentResponse> response2 = restClient.get()
+                .uri("v1/comments/infinite-scroll?articleId=1&pageSize=30&lastParentId=%s&lastCommentId=%s"
+                        .formatted(lastParentCommentId, lastCommentId))
+                .retrieve()
+                .body(new ParameterizedTypeReference<List<CommentResponse>>() {
+                });
+
+        System.out.println("second Page of Infinite Scroll");
+        for (CommentResponse comment : response2) {
+            System.out.println(comment);
+        }
     }
 }
