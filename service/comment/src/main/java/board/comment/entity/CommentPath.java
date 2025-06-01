@@ -11,6 +11,7 @@ import lombok.ToString;
 @Embeddable
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CommentPath {
+
     private String path;
 
     // 총 62
@@ -71,20 +72,18 @@ public class CommentPath {
             throw new IllegalStateException("CHUNK OVERFLOWED");
         }
 
-        int charsetLength = CHARSET.length();
-
         // 10진수 변환 후 -> 값 1 증가
         int value = 0;
         for (char ch : lastChunk.toCharArray()) {
-            value = value * charsetLength + CHARSET.indexOf(ch);
+            value = value * CHARSET.length() + CHARSET.indexOf(ch);
         }
         value = value + 1;
 
         // 10진수 값을 다시 62진수로 변환
         String result = "";
         for (int i = 0; i < DEPTH_CHEUNK_SIZE; i++) {
-            result = CHARSET.charAt(value % charsetLength) + result;
-            value /= charsetLength;
+            result = CHARSET.charAt(value % CHARSET.length()) + result;
+            value /= CHARSET.length();
         }
 
         return path.substring(0, path.length() - DEPTH_CHEUNK_SIZE) + result;
