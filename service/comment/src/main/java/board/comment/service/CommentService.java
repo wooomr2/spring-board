@@ -86,7 +86,7 @@ public class CommentService {
         }
     }
 
-    public CommentPageResponse readAll(Long articleId, Long page, Long pageSize) {
+    public CommentPageResponse readAllInfiniteScroll(Long articleId, Long page, Long pageSize) {
         return CommentPageResponse.of(
                 commentRepository.findAll(articleId, (page - 1) * pageSize, pageSize)
                         .stream()
@@ -96,7 +96,7 @@ public class CommentService {
         );
     }
 
-    public List<CommentResponse> readAll(Long articleId, Long lastParentCommentId, Long lastCommentId, Long limit) {
+    public List<CommentResponse> readAllInfiniteScroll(Long articleId, Long lastParentCommentId, Long lastCommentId, Long limit) {
         List<Comment> comments = (lastParentCommentId == null || lastCommentId == null) ?
                 commentRepository.findAllInfiniteScroll(articleId, limit) :
                 commentRepository.findAllInfiniteScroll(articleId, lastParentCommentId, lastCommentId, limit);

@@ -38,7 +38,7 @@ public class CommentController {
                                        @RequestParam Long page,
                                        @RequestParam Long pageSize
     ) {
-        return commentService.readAll(articleId, page, pageSize);
+        return commentService.readAllInfiniteScroll(articleId, page, pageSize);
     }
 
     /**
@@ -51,6 +51,6 @@ public class CommentController {
             @RequestParam(required = false) Long lastCommentId,
             @RequestParam Long pageSize
     ) {
-        return commentService.readAll(articleId, lastParentId, lastCommentId, pageSize);
+        return commentService.readAllInfiniteScroll(articleId, lastParentId, lastCommentId, pageSize);
     }
 }

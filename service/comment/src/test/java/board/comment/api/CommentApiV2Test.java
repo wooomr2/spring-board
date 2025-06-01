@@ -1,10 +1,14 @@
 package board.comment.api;
 
+import board.comment.dto.response.CommentPageResponseV2;
 import board.comment.dto.response.CommentResponseV2;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.junit.jupiter.api.Test;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.web.client.RestClient;
+
+import java.util.List;
 
 public class CommentApiV2Test {
 
@@ -62,45 +66,44 @@ public class CommentApiV2Test {
                 .toBodilessEntity();
     }
 
-//    @Test
-//    void readAll() {
-//        CommentPageResponse response = restClient.get()
-//                .uri("v2/comments?articleId=1&page=50000&pageSize=30")
-//                .retrieve()
-//                .body(CommentPageResponse.class);
-//
-//        System.out.println(response.getCommentCount());
-//        for (CommentResponseV2 comment : response.getComments()) {
-//            System.out.println(comment.getCommentId());
-//        }
-//    }
-//
-//    @Test
-//    void readAllInfiniteScroll() {
-//        List<CommentResponseV2> response1 = restClient.get()
-//                .uri("v2/comments/infinite-scroll?articleId=1&pageSize=30")
-//                .retrieve()
-//                .body(new ParameterizedTypeReference<List<CommentResponseV2>>() {
-//                });
-//
-//        System.out.println("first Page of Infinite Scroll");
-//        for (CommentResponseV2 comment : response1) {
-//            System.out.println(comment);
-//        }
-//
-//        Long lastParentCommentId = response1.getLast().getParentCommentId();
-//        Long lastCommentId = response1.getLast().getCommentId();
-//
-//        List<CommentResponseV2> response2 = restClient.get()
-//                .uri("v2/comments/infinite-scroll?articleId=1&pageSize=30&lastParentId=%s&lastCommentId=%s"
-//                        .formatted(lastParentCommentId, lastCommentId))
-//                .retrieve()
-//                .body(new ParameterizedTypeReference<List<CommentResponseV2>>() {
-//                });
-//
-//        System.out.println("second Page of Infinite Scroll");
-//        for (CommentResponseV2 comment : response2) {
-//            System.out.println(comment);
-//        }
-//    }
+    @Test
+    void readAll() {
+        CommentPageResponseV2 response = restClient.get()
+                .uri("v2/comments?articleId=1&page=50000&pageSize=30")
+                .retrieve()
+                .body(CommentPageResponseV2.class);
+
+        System.out.println(response.getCommentCount());
+        for (CommentResponseV2 comment : response.getComments()) {
+            System.out.println(comment.getCommentId());
+        }
+    }
+
+    @Test
+    void readAllInfiniteScroll() {
+        List<CommentResponseV2> response1 = restClient.get()
+                .uri("v2/comments/infinite-scroll?articleId=1&pageSize=30")
+                .retrieve()
+                .body(new ParameterizedTypeReference<List<CommentResponseV2>>() {
+                });
+
+        System.out.println("first Page of Infinite Scroll");
+        for (CommentResponseV2 comment : response1) {
+            System.out.println(comment);
+        }
+
+        String lastPath = response1.getLast().getPath();
+
+        List<CommentResponseV2> response2 = restClient.get()
+                .uri("v2/comments/infinite-scroll?articleId=1&pageSize=30&lastPath=%s"
+                        .formatted(lastPath))
+                .retrieve()
+                .body(new ParameterizedTypeReference<List<CommentResponseV2>>() {
+                });
+
+        System.out.println("second Page of Infinite Scroll");
+        for (CommentResponseV2 comment : response2) {
+            System.out.println(comment);
+        }
+    }
 }

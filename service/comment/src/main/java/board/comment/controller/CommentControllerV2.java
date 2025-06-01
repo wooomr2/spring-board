@@ -1,10 +1,13 @@
 package board.comment.controller;
 
 import board.comment.dto.request.CommentCreateRequestV2;
+import board.comment.dto.response.CommentPageResponseV2;
 import board.comment.dto.response.CommentResponseV2;
 import board.comment.service.CommentServiceV2;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -27,27 +30,26 @@ public class CommentControllerV2 {
         commentService.delete(commentId);
     }
 
-//    /**
-//     * 페이징 List
-//     */
-//    @GetMapping("/v2/comments")
-//    public CommentPageResponse readAll(@RequestParam Long articleId,
-//                                       @RequestParam Long page,
-//                                       @RequestParam Long pageSize
-//    ) {
-//        return commentService.readAll(articleId, page, pageSize);
-//    }
-//
-//    /**
-//     * 무한스크롤 List
-//     */
-//    @GetMapping("/v2/comments/infinite-scroll")
-//    public List<CommentResponseV2> readAll(
-//            @RequestParam Long articleId,
-//            @RequestParam(required = false) Long lastParentId,
-//            @RequestParam(required = false) Long lastCommentId,
-//            @RequestParam Long pageSize
-//    ) {
-//        return commentService.readAll(articleId, lastParentId, lastCommentId, pageSize);
-//    }
+    /**
+     * 페이징 List
+     */
+    @GetMapping("/v2/comments")
+    public CommentPageResponseV2 readAll(@RequestParam Long articleId,
+                                         @RequestParam Long page,
+                                         @RequestParam Long pageSize
+    ) {
+        return commentService.readAll(articleId, page, pageSize);
+    }
+
+    /**
+     * 무한스크롤 List
+     */
+    @GetMapping("/v2/comments/infinite-scroll")
+    public List<CommentResponseV2> readAll(
+            @RequestParam Long articleId,
+            @RequestParam(required = false) String lastPath,
+            @RequestParam Long pageSize
+    ) {
+        return commentService.readAllInfiniteScroll(articleId, lastPath, pageSize);
+    }
 }
