@@ -149,3 +149,80 @@ comment.delete()로 deleted 값 변경.
 
 @Transactional 메서드 끝날 때 트랜잭션이 커밋되며, 그 시점에 JPA가 감지된 변경 사항에 대해 UPDATE 쿼리를 실행.
 ```
+
+
+[//]: # (
+```
+ArticleLikeService.unlikePessimisticLock1
+ArticleLikeService.unlikePessimisticLock2
+
+위 두 개의 메소드에서,
+articleLikeRepository.findByArticleIdAndUserId(articleId, userId)
+쿼리가 수행됩니다.
+
+동일 파라미터에 대해 데이터가 삭제되기 전까지의 모든 동시 요청은 데이터 조회를 성공하고, ifPresent 구문으로 들어가게 됩니다.
+그리고 JPA의 delete 메소드를 호출하는데, JPA의 delete 메소드는 조회된 엔티티가 타 트랜잭션에 의해 이미 삭제되었더라도 예외를 던지지 않습니다.
+즉, 동시에 ifPresent로 들어간 모든 요청은 decrease를 중복으로 수행하게 됩니다.
+1개만 감소하면 충분한 상황인데도, 동시 요청에 의해 카운트가 중복으로 감소되는 것입니다.
+이를 해결하려면, JPA의 delete 메소드를 사용하는 대신, 직접 DELETE 쿼리를 native query로 정의할 수 있습니다.
+직접 정의한 DELETE 쿼리는 영향 받은 row의 수를 반환할 수 있도록 하고,
+이러한 반환 값이 0이라면, 이미 다른 요청에 의해 데이터가 삭제 되었음을 의미합니다.
+이 경우 예외를 발생시켜서 decrease 중복 수행을 방지할 수 있습니다.
+```
+)
+
+[//]: # ()
+```
+✅ 1. @Lock(LockModeType.PESSIMISTIC_FORCE_INCREMENT)
+🔍 역할
+해당 쿼리를 실행할 때 JPA가 SQL의 SELECT ... FOR UPDATE 문을 생성하여,
+해당 행(row)에 비관적 잠금(Pessimistic Lock)을 적용함
+동시에 수정하려는 트랜잭션이 있다면 락이 풀릴 때까지 대기 또는 실패
+
+🔐 LockModeType.PESSIMISTIC_FORCE_INCREMENT 설명
+모드	설명
+PESSIMISTIC_READ	읽기 잠금 (FOR SHARE) — 다른 트랜잭션이 쓰기 못함
+PESSIMISTIC_WRITE	쓰기 잠금 (FOR UPDATE) — 다른 트랜잭션이 읽기/쓰기 못함
+**PESSIMISTIC_FORCE_INCREMENT**	PESSIMISTIC_WRITE + 버전 증가
+
+즉, PESSIMISTIC_FORCE_INCREMENT는: 행에 대해 쓰기 잠금(FOR UPDATE)을 걸고,
+@Version 필드를 강제로 증가시킴 (Optimistic Lock과 호환성 확보)
+
+💡 내부 동작 흐름
+
+Spring Data JPA가 리포지토리 메서드 분석
+
+RepositoryFactorySupport → JpaRepositoryFactory
+메서드에 @Lock이 있으면 → QueryMethod.getLockModeType()으로 LockMode 추출
+Query 생성 시 LockMode 설정
+내부에서 JPA EntityManager.createQuery(...) 또는 createNamedQuery(...) 호출
+이때 javax.persistence.Query.setLockMode(LockModeType.PESSIMISTIC_FORCE_INCREMENT) 적용
+Hibernate가 SQL 생성 시 FOR UPDATE 추가
+Hibernate 내부 클래스 org.hibernate.dialect.Dialect에서 데이터베이스에 맞는 FOR UPDATE SQL 구문 생성
+MySQL의 경우: SELECT ... FOR UPDATE
+PostgreSQL의 경우: SELECT ... FOR UPDATE NOWAIT 등
+JDBC 실행 → 락 획득
+락을 얻지 못하면 트랜잭션 대기 또는 예외 (LockTimeoutException)
+
+SELECT * FROM article_like_count WHERE article_id = ? FOR UPDATE
+그리고 JPA의 버전 필드 (@Version)가 강제로 +1 됨
+
+⚠️ 주의 사항
+트랜잭션 내에서만 사용 가능 (@Transactional)
+락을 걸기 때문에 성능에 영향, 필요할 때만 사용
+락 획득 실패 시 LockTimeoutException 발생 가능
+```
+
+[//]: # ()
+```
+✅ 2. @Modifying
+🔍 역할
+**@Query가 DML (INSERT / UPDATE / DELETE)**일 때 명시적으로 사용
+Spring Data JPA는 기본적으로 SELECT 쿼리로 추정 →
+@Modifying 없으면 실행 시 InvalidDataAccessApiUsageException 발생
+
+🔧 내부 동작 원리
+@Modifying이 붙은 메서드는 Spring Data JPA 내부적으로 Query.executeUpdate()를 호출함
+이로 인해 반환 타입은 void, int, boolean 중 하나
+int는 영향을 받은 row 수를 반환
+```
