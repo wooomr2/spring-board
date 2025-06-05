@@ -24,6 +24,12 @@ public class ArticleLikeService {
                 .orElseThrow();
     }
 
+
+    public Long count(Long articleId) {
+        return articleLikeCountRepository.findById(articleId)
+                .map(ArticleLikeCount::getLikeCount).orElse(0L);
+    }
+
     @Transactional
     public void like(Long articleId, Long userId) {
         articleLikeRepository.save(
@@ -60,7 +66,7 @@ public class ArticleLikeService {
             // TODO::
             // 최초 요청시에는 update 되는 레코드가 없으므로 1로 초기화한다.
             // 트래픽이 순식간에 몰리는 경우, 유실될 수 있으므로
-            // 게시글 생성 시점에 미리 0으로 초기화(생성) 해줄 수 있다.
+            // 게시글 생성 시점에 미리 0으로 초기화(생성) 해줘야 한다.
             articleLikeCountRepository.save(
                     ArticleLikeCount.init(articleId, 1L)
             );
@@ -99,7 +105,8 @@ public class ArticleLikeService {
                         userId
                 )
         );
-
+        
+        // 조회시점부터 락을 점유하고 있기때문에 조회된 엔티티를 기반으로 가능
         ArticleLikeCount articleLikeCount = articleLikeCountRepository.findLockedByArticleId(articleId)
                 .orElseGet(() -> ArticleLikeCount.init(articleId, 0L));
         articleLikeCount.increase();

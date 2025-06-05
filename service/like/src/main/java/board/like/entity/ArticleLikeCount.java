@@ -10,18 +10,15 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 @Table(name = "article_like_count")
-@Entity
 @Getter
+@Entity
 @ToString
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ArticleLikeCount {
-
     @Id
-    private Long articleId;
-
+    private Long articleId; // shard key
     private Long likeCount;
-
-    @Version
+//    @Version
     private Long version;
 
     public static ArticleLikeCount init(Long articleId, Long likeCount) {

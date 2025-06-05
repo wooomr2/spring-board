@@ -19,6 +19,11 @@ public class ArticleLikeController {
         return articleLikeService.read(articleId, userId);
     }
 
+    @GetMapping("/v1/article-likes/articles/{articleId}/count")
+    public Long count(@PathVariable Long articleId) {
+        return articleLikeService.count(articleId);
+    }
+
     @PostMapping("v1/article-likes/articles/{articleId}/users/{userId}")
     public void like(
             @PathVariable Long articleId,
@@ -46,7 +51,7 @@ public class ArticleLikeController {
         articleLikeService.likePessimisticLock1(articleId, userId);
     }
 
-    @DeleteMapping("v1/article-likes/articles/{articleId}/users/{userId/pessimistic-lock-1}")
+    @DeleteMapping("v1/article-likes/articles/{articleId}/users/{userId}/pessimistic-lock-1")
     public void unlikePessimisticLock1(
             @PathVariable Long articleId,
             @PathVariable Long userId
@@ -65,7 +70,7 @@ public class ArticleLikeController {
         articleLikeService.likePessimisticLock2(articleId, userId);
     }
 
-    @DeleteMapping("v1/article-likes/articles/{articleId}/users/{userId/pessimistic-lock-2}")
+    @DeleteMapping("v1/article-likes/articles/{articleId}/users/{userId}/pessimistic-lock-2")
     public void unlikePessimisticLock2(
             @PathVariable Long articleId,
             @PathVariable Long userId
@@ -84,7 +89,7 @@ public class ArticleLikeController {
         articleLikeService.likeOptimisticLock(articleId, userId);
     }
 
-    @DeleteMapping("v1/article-likes/articles/{articleId}/users/{userId/optimistic-lock}")
+    @DeleteMapping("v1/article-likes/articles/{articleId}/users/{userId}/optimistic-lock")
     public void unlikeOptimisticLock(
             @PathVariable Long articleId,
             @PathVariable Long userId
