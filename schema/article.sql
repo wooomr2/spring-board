@@ -28,4 +28,4 @@ create table article.outbox
     created_at datetime      not null
 );
 
-create index idx_shard_key_created_at on article.outbox (shard_key asc, created_at asc
+create index idx_shard_key_created_at on article.outbox (shard_key asc, created_at asc);

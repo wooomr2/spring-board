@@ -123,4 +123,30 @@ public class ArticleApiTest {
             System.out.println("last article = " + article);
         }
     }
+
+    @Test
+    void countTest() {
+        ArticleResponse response = create(new ArticleCreateRequest(
+                "count test", "content for count test", 1L, 2L
+        ));
+
+        Long count = restClient.get()
+                .uri("/v1/articles/boards/{boardId}/count", response.getBoardId())
+                .retrieve()
+                .body(Long.class);
+
+        System.out.println("count = " + count);
+
+        restClient.delete()
+                .uri("v1/articles/{articleId}", response.getArticleId())
+                .retrieve()
+                .toBodilessEntity();
+
+        Long count2 = restClient.get()
+                .uri("/v1/articles/boards/{boardId}/count", response.getBoardId())
+                .retrieve()
+                .body(Long.class);
+
+        System.out.println("count2 = " + count2);
+    }
 }
