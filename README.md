@@ -1,3 +1,4 @@
+```
 docker pull mysql:8.0.38
 
 docker run --name board-mysql -e MYSQL_ROOT_PASSWORD=root -d -p 3307:3306 mysql:8.0.38
@@ -5,11 +6,21 @@ docker run --name board-mysql -e MYSQL_ROOT_PASSWORD=root -d -p 3307:3306 mysql:
 docker exec -it board-mysql bash
 
 mysql -u root -p
-
+```
+```
 docker run --name board-redis -d -p 6379:6379 redis:7.4
+```
+```
+docker run --name board-kafka -d -p 9092:9092 apache/kafka:3.8.0
 
+docker exec --workdir /opt/kafka/bin -it board-kafka sh
 
-
+[//]: # (KAFKA 토픽 생성, local message broker 1개로 셋팅)
+./kafka-topics.sh --bootstrap-server localhost:9092 --create --topic board-article --replication-factor 1 --partitions 3
+./kafka-topics.sh --bootstrap-server localhost:9092 --create --topic board-comment --replication-factor 1 --partitions 3
+./kafka-topics.sh --bootstrap-server localhost:9092 --create --topic board-like --replication-factor 1 --partitions 3
+./kafka-topics.sh --bootstrap-server localhost:9092 --create --topic board-view --replication-factor 1 --partitions 3
+```
 
 [//]: # (PK 선택 전략)
 
