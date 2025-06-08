@@ -3,11 +3,12 @@ package board.comment.service;
 import board.comment.dto.request.CommentCreateRequestV2;
 import board.comment.dto.response.CommentPageResponseV2;
 import board.comment.dto.response.CommentResponseV2;
+import board.comment.entity.ArticleCommentCount;
 import board.comment.entity.CommentPath;
 import board.comment.entity.CommentV2;
+import board.comment.repository.ArticleCommentCountRepository;
 import board.comment.repository.CommentRepositoryV2;
 import board.common.snowflake.Snowflake;
-import board.common.util.PageLimitCalculator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,7 @@ public class CommentServiceV2 {
 
     private final Snowflake snowflake = new Snowflake();
     private final CommentRepositoryV2 commentRepository;
+    private final ArticleCommentCountRepository articleCommentCountRepository;
 
     @Transactional
     public CommentResponseV2 create(CommentCreateRequestV2 request) {
@@ -44,6 +46,12 @@ public class CommentServiceV2 {
                         )
                 )
         );
+        int result = articleCommentCountRepository.increase(request.getArticleId());
+        if (result == 0) {
+            articleCommentCountRepository.save(
+                    ArticleCommentCount.init(request.getArticleId(), 1L)
+            );
+        }
 
         return CommentResponseV2.from(comment);
     }
@@ -80,6 +88,7 @@ public class CommentServiceV2 {
 
     private void _delete(CommentV2 comment) {
         commentRepository.delete(comment);
+        articleCommentCountRepository.decrease(comment.getArticleId());
         if (!comment.isRoot()) {
             commentRepository.findByPath(comment.getCommentPath().getParentPath())
                     .filter(CommentV2::getDeleted)
@@ -100,7 +109,8 @@ public class CommentServiceV2 {
                 commentRepository.findAll(articleId, (page - 1) * pageSize, pageSize).stream()
                         .map(CommentResponseV2::from)
                         .toList(),
-                commentRepository.count(articleId, PageLimitCalculator.calculatePageLimit(page, pageSize, 10L))
+//                commentRepository.count(articleId, PageLimitCalculator.calculatePageLimit(page, pageSize, 10L))
+                count(articleId)
         );
     }
 
@@ -110,5 +120,11 @@ public class CommentServiceV2 {
                 commentRepository.findAllInfiniteScroll(articleId, lastPath, pageSize);
 
         return comments.stream().map(CommentResponseV2::from).toList();
+    }
+
+    public Long count(Long articleId) {
+        return articleCommentCountRepository.findById(articleId)
+                .map(ArticleCommentCount::getCommentCount)
+                .orElse(0L);
     }
 }

@@ -106,4 +106,27 @@ public class CommentApiV2Test {
             System.out.println(comment);
         }
     }
+
+    @Test
+    void countTest() {
+        Long articleId = 4L;
+        CommentResponseV2 commentResponse = createComment(new CommentCreateRequestV2(articleId, "comment1", null, 1L));
+
+        Long count1 = restClient.get()
+                .uri("/v2/comments/articles/{articleId}/count", articleId)
+                .retrieve()
+                .body(Long.class);
+        System.out.println("count1 = " + count1); // 1
+
+        restClient.delete()
+                .uri("/v2/comments/{commentId}", commentResponse.getCommentId())
+                .retrieve()
+                .toBodilessEntity();
+
+        Long count2 = restClient.get()
+                .uri("/v2/comments/articles/{articleId}/count", articleId)
+                .retrieve()
+                .body(Long.class);
+        System.out.println("count2 = " + count2); // 0
+    }
 }
