@@ -6,6 +6,10 @@ docker exec -it board-mysql bash
 
 mysql -u root -p
 
+docker run --name board-redis -d -p 6379:6379 redis:7.4
+
+
+
 
 [//]: # (PK 선택 전략)
 
@@ -225,4 +229,10 @@ Spring Data JPA는 기본적으로 SELECT 쿼리로 추정 →
 @Modifying이 붙은 메서드는 Spring Data JPA 내부적으로 Query.executeUpdate()를 호출함
 이로 인해 반환 타입은 void, int, boolean 중 하나
 int는 영향을 받은 row 수를 반환
+```
+
+
+[//]: # (조회수 어뷰징 방지: 분산락 Distributed Lock)
+```
+
 ```
