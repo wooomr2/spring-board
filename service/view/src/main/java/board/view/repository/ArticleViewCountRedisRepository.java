@@ -15,6 +15,10 @@ public class ArticleViewCountRedisRepository {
      */
     private static final String KEY_FORMAT = "view::article::%s::view_count";
 
+    private String _generateKey(Long articleId) {
+        return KEY_FORMAT.formatted(articleId);
+    }
+
     public Long read(Long articleId) {
         String result = redisTemplate.opsForValue().get(_generateKey(articleId));
         return result == null ? 0L : Long.parseLong(result);
@@ -22,9 +26,5 @@ public class ArticleViewCountRedisRepository {
 
     public Long increase(Long articleId) {
         return redisTemplate.opsForValue().increment(_generateKey(articleId));
-    }
-
-    private String _generateKey(Long articleId) {
-        return KEY_FORMAT.formatted(articleId);
     }
 }
