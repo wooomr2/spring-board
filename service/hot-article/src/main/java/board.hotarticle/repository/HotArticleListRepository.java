@@ -20,10 +20,20 @@ public class HotArticleListRepository {
 
     private final StringRedisTemplate redisTemplate;
 
-    // key - hot-article::list::{yyyyMMdd}
+    /**
+     * key - hot-article::list::{yyyyMMdd}
+     */
     private static final String KEY_FORMAT = "hot-article::list::%s";
 
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
+
+    private String generateKey(LocalDateTime time) {
+        return generateKey(TIME_FORMATTER.format(time));
+    }
+
+    private String generateKey(String dateStr) {
+        return KEY_FORMAT.formatted(dateStr);
+    }
 
     public void add(Long articleId, LocalDateTime time, Long score, Long limit, Duration ttl) {
         redisTemplate.executePipelined((RedisCallback<?>) action -> {
@@ -36,12 +46,8 @@ public class HotArticleListRepository {
         });
     }
 
-    private String generateKey(LocalDateTime time) {
-        return generateKey(TIME_FORMATTER.format(time));
-    }
-
-    private String generateKey(String dateStr) {
-        return String.format(KEY_FORMAT, dateStr);
+    public void remove(Long articleId, LocalDateTime time) {
+        redisTemplate.opsForZSet().remove(generateKey(time), String.valueOf(articleId));
     }
 
     public List<Long> readAll(String dateStr) {
