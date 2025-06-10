@@ -1,4 +1,5 @@
-server.port: 9004
+server:
+  port: 9004
 spring:
   application:
     name: board-hot-article-service
@@ -9,7 +10,7 @@ spring:
   kafka:
     bootstrap-servers: localhost:9092
     consumer:
-      group-id: kuke-board-hot-article-service
+      group-id: board-hot-article-service
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       enable-auto-commit: false

@@ -21,7 +21,7 @@ public class HotArticleEventConsumer {
             EventType.Topic.BOARD_ARTICLE,
             EventType.Topic.BOARD_COMMENT,
             EventType.Topic.BOARD_LIKE,
-            EventType.Topic.BOARD_VIEW
+            EventType.Topic.BOARD_VIEW,
     })
     public void listen(String message, Acknowledgment ack) {
         log.info("[HotArticleEventConsumer.listen] Received message={}", message);
@@ -30,7 +30,6 @@ public class HotArticleEventConsumer {
             if (event != null) {
                 hotArticleService.handleEvent(event);
             }
-
             ack.acknowledge();
         } catch (Exception e) {
             log.error("[HotArticleEventConsumer.listen] Error processing message: {}", message, e);
