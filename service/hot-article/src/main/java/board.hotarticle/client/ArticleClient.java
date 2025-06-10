@@ -31,9 +31,9 @@ public class ArticleClient {
                     .retrieve()
                     .body(ArticleResponse.class);
         } catch (Exception e) {
-            log.error("Failed to read article with ID: {}", articleId, e);
-            throw new RuntimeException("Failed to read article", e);
+            log.error("[ArticleClient.read]: articleId={}", articleId, e);
         }
+        return null;
     }
 
     @Getter
