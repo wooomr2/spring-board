@@ -24,4 +24,8 @@ public class ArticleViewCount {
         articleViewCount.viewCount = viewCount;
         return articleViewCount;
     }
+
+    public Long getShardKey() {
+        return articleId;
+    }
 }

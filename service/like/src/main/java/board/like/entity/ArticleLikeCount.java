@@ -36,4 +36,8 @@ public class ArticleLikeCount {
     public void decrease() {
         this.likeCount--;
     }
+
+    public Long getShardKey() {
+        return articleId;
+    }
 }

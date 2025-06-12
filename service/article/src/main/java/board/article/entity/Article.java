@@ -44,4 +44,8 @@ public class Article {
         this.content = content;
         this.modifiedAt = LocalDateTime.now();
     }
+
+    public Long getShardKey() {
+        return boardId;
+    }
 }

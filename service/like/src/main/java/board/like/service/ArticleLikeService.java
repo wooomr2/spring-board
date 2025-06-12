@@ -1,5 +1,9 @@
 package board.like.service;
 
+import board.common.event.EventType;
+import board.common.event.payload.ArticleLikedEventPayload;
+import board.common.event.payload.ArticleUnLikedEventPayload;
+import board.common.outboxmessagerelay.OutboxEventPublisher;
 import board.common.snowflake.Snowflake;
 import board.like.dto.response.ArticleLikeResponse;
 import board.like.entity.ArticleLike;
@@ -17,6 +21,7 @@ public class ArticleLikeService {
     private final Snowflake snowflake = new Snowflake();
     private final ArticleLikeRepository articleLikeRepository;
     private final ArticleLikeCountRepository articleLikeCountRepository;
+    private final OutboxEventPublisher outboxEventPublisher;
 
     public ArticleLikeResponse read(Long articleId, Long userId) {
         return articleLikeRepository.findByArticleIdAndUserId(articleId, userId)
@@ -53,7 +58,7 @@ public class ArticleLikeService {
      */
     @Transactional
     public void likePessimisticLock1(Long articleId, Long userId) {
-        articleLikeRepository.save(
+        ArticleLike articleLike = articleLikeRepository.save(
                 ArticleLike.create(
                         snowflake.nextId(),
                         articleId,
@@ -71,6 +76,18 @@ public class ArticleLikeService {
                     ArticleLikeCount.init(articleId, 1L)
             );
         }
+
+        outboxEventPublisher.publish(
+                EventType.ARTICLE_LIKED,
+                ArticleLikedEventPayload.builder()
+                        .articleLkieId(articleLike.getArticleLikeId())
+                        .articleId(articleLike.getArticleId())
+                        .userId(articleLike.getUserId())
+                        .createdAt(articleLike.getCreatedAt())
+                        .articleLkieCount(count(articleLike.getArticleId()))
+                        .build(),
+                articleLike.getShardKey()
+        );
     }
 
     // TODO::
@@ -89,6 +106,18 @@ public class ArticleLikeService {
                 .ifPresent(articleLike -> {
                     articleLikeRepository.delete(articleLike);
                     articleLikeCountRepository.decrease(articleId);
+
+                    outboxEventPublisher.publish(
+                            EventType.ARTICLE_UNLIKED,
+                            ArticleUnLikedEventPayload.builder()
+                                    .articleLkieId(articleLike.getArticleLikeId())
+                                    .articleId(articleLike.getArticleId())
+                                    .userId(articleLike.getUserId())
+                                    .createdAt(articleLike.getCreatedAt())
+                                    .articleLkieCount(count(articleLike.getArticleId()))
+                                    .build(),
+                            articleLike.getShardKey()
+                    );
                 });
     }
 
@@ -105,7 +134,7 @@ public class ArticleLikeService {
                         userId
                 )
         );
-        
+
         // 조회시점부터 락을 점유하고 있기때문에 조회된 엔티티를 기반으로 가능
         ArticleLikeCount articleLikeCount = articleLikeCountRepository.findLockedByArticleId(articleId)
                 .orElseGet(() -> ArticleLikeCount.init(articleId, 0L));

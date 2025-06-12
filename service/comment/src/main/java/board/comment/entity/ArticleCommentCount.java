@@ -25,4 +25,8 @@ public class ArticleCommentCount {
         artilceCommentCount.commentCount = commentCount;
         return artilceCommentCount;
     }
+
+    public Long getShardKey() {
+        return articleId;
+    }
 }

@@ -20,7 +20,7 @@ public class ArticleLike {
     @Id
     private Long articleLikeId;
 
-    private Long articleId;
+    private Long articleId; // shard key
     private Long userId;
 
     private LocalDateTime createdAt;
@@ -32,5 +32,9 @@ public class ArticleLike {
         articleLike.userId = userId;
         articleLike.createdAt = LocalDateTime.now();
         return articleLike;
+    }
+
+    public Long getShardKey() {
+        return articleId;
     }
 }

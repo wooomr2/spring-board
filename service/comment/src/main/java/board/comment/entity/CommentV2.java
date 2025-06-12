@@ -48,4 +48,8 @@ public class CommentV2 {
     public void delete() {
         deleted = true;
     }
+
+    public Long getShardKey() {
+        return articleId;
+    }
 }

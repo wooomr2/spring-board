@@ -8,6 +8,11 @@ import board.article.entity.Article;
 import board.article.entity.BoardArticleCount;
 import board.article.repository.ArticleRepository;
 import board.article.repository.BoardArticleCountRepository;
+import board.common.event.EventType;
+import board.common.event.payload.ArticleCreatedEventPayload;
+import board.common.event.payload.ArticleDeletedEventPayload;
+import board.common.event.payload.ArticleUpdatedEventPayload;
+import board.common.outboxmessagerelay.OutboxEventPublisher;
 import board.common.snowflake.Snowflake;
 import board.common.util.PageLimitCalculator;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +28,7 @@ public class ArticleService {
     private final Snowflake snowflake = new Snowflake();
     private final ArticleRepository articleRepository;
     private final BoardArticleCountRepository boardArticleCountRepository;
+    private final OutboxEventPublisher outboxEventPublisher;
 
     @Transactional
     public ArticleResponse create(ArticleCreateRequest request) {
@@ -40,6 +46,21 @@ public class ArticleService {
             boardArticleCountRepository.save(BoardArticleCount.init(request.getBoardId(), 1L));
         }
 
+        outboxEventPublisher.publish(
+                EventType.ARTICLE_CREATED,
+                ArticleCreatedEventPayload.builder()
+                        .articleId(article.getArticleId())
+                        .boardId(article.getBoardId())
+                        .title(article.getTitle())
+                        .content(article.getContent())
+                        .writerId(article.getWriterId())
+                        .createdAt(article.getCreatedAt())
+                        .modifiedAt(article.getModifiedAt())
+                        .boardArticleCount(count(article.getBoardId()))
+                        .build()
+                , article.getShardKey()
+        );
+
         return ArticleResponse.from(article);
     }
 
@@ -48,6 +69,20 @@ public class ArticleService {
         Article article = articleRepository.findById(articleId).orElseThrow();
 
         article.update(request.getTitle(), request.getContent());
+
+        outboxEventPublisher.publish(
+                EventType.ARTICLE_UPDATED,
+                ArticleUpdatedEventPayload.builder()
+                        .articleId(article.getArticleId())
+                        .boardId(article.getBoardId())
+                        .title(article.getTitle())
+                        .content(article.getContent())
+                        .writerId(article.getWriterId())
+                        .createdAt(article.getCreatedAt())
+                        .modifiedAt(article.getModifiedAt())
+                        .build()
+                , article.getShardKey()
+        );
 
         return ArticleResponse.from(article);
     }
@@ -62,6 +97,22 @@ public class ArticleService {
         Article article = articleRepository.findById(articleId).orElseThrow();
         articleRepository.delete(article);
         boardArticleCountRepository.decrease(article.getBoardId());
+
+        outboxEventPublisher.publish(
+                EventType.ARTICLE_DELETED,
+                ArticleDeletedEventPayload.builder()
+                        .articleId(article.getArticleId())
+                        .boardId(article.getBoardId())
+                        .title(article.getTitle())
+                        .content(article.getContent())
+                        .writerId(article.getWriterId())
+                        .createdAt(article.getCreatedAt())
+                        .modifiedAt(article.getModifiedAt())
+                        .boardArticleCount(count(article.getBoardId()))
+                        .build()
+                , article.getShardKey()
+        );
+
     }
 
     public ArticlePageResponse readAll(Long boardId, Long page, Long pageSize, Long movablePageCount) {

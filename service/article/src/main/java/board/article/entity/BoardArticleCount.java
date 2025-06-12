@@ -25,4 +25,8 @@ public class BoardArticleCount {
         boardArticleCount.articleCount = articleCount;
         return boardArticleCount;
     }
+
+    public Long getShardKey() {
+        return boardId;
+    }
 }
