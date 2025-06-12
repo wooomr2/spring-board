@@ -24,7 +24,7 @@ import java.util.concurrent.ScheduledExecutorService;
 @EnableScheduling
 public class MessageRelayConfig {
 
-    @Value("{spring.kafka.bootstrap-servers}")
+    @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
 
     @Bean
