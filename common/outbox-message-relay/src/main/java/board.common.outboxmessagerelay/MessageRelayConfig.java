@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 @EnableAsync
 @Configuration
@@ -47,7 +48,7 @@ public class MessageRelayConfig {
     }
 
     @Bean
-    public Executor messageRelayPublishPendingExecutor() {
+    public ScheduledExecutorService messageRelayPublishPendingExecutor() {
         return Executors.newSingleThreadScheduledExecutor();
     }
 }

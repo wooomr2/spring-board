@@ -16,6 +16,9 @@ public class OutboxEventPublisher {
     private final Snowflake eventSnowflake = new Snowflake();
     private final ApplicationEventPublisher applicationEventPublisher;
 
+    /**
+     * Kafka event 발행
+     */
     public void publish(EventType type, EventPayload payload, Long shardKey) {
         // articleId= 10, shardKey == articleId
         // 10 % 4 = 2 물리적 샤드

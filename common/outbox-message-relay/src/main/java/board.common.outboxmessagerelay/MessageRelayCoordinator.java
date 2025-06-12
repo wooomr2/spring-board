@@ -1,6 +1,7 @@
 package board.common.outboxmessagerelay;
 
 
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.connection.StringRedisConnection;
@@ -59,4 +60,11 @@ public class MessageRelayCoordinator {
                 }
         );
     }
-}`
+
+    @PreDestroy
+    public void leave() {
+        redisTemplate.opsForZSet().remove(generateKey(), APP_ID);
+    }
+
+
+}
