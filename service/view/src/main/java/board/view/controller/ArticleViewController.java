@@ -13,7 +13,7 @@ public class ArticleViewController {
 
     private final ArticleViewService articleViewService;
 
-    @PostMapping("/v1/article-view/articles/{articleId}/users/{userId}")
+    @PostMapping("/v1/article-views/articles/{articleId}/users/{userId}")
     public Long increase(
             @PathVariable Long articleId,
             @PathVariable Long userId
@@ -21,7 +21,7 @@ public class ArticleViewController {
         return articleViewService.increase(articleId, userId);
     }
 
-    @GetMapping("/v1/article-view/articles/{articleId}/count")
+    @GetMapping("/v1/article-views/articles/{articleId}/count")
     public Long count(@PathVariable Long articleId) {
         return articleViewService.count(articleId);
     }

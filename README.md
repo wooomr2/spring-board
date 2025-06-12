@@ -7,9 +7,11 @@ docker exec -it board-mysql bash
 
 mysql -u root -p
 ```
+
 ```
 docker run --name board-redis -d -p 6379:6379 redis:7.4
 ```
+
 ```
 docker run --name board-kafka -d -p 9092:9092 apache/kafka:3.8.0
 
@@ -150,6 +152,7 @@ ParameterizedTypeReference<T>는 Java의 제네릭 타입 소거 문제를 우�
 ````
 
 [//]: # (Comment 삭제)
+
 ``` 
 🔄 변경 감지(Dirty Checking)에 의해 반영되는 시점
 JPA는 트랜잭션 안에서 엔티티의 필드가 변경되면 자동으로 변경 사항을 감지해서, 트랜잭션 커밋 시점에 UPDATE 쿼리를 실행합니다.
@@ -165,8 +168,8 @@ comment.delete()로 deleted 값 변경.
 @Transactional 메서드 끝날 때 트랜잭션이 커밋되며, 그 시점에 JPA가 감지된 변경 사항에 대해 UPDATE 쿼리를 실행.
 ```
 
-
 [//]: # (
+
 ```
 ArticleLikeService.unlikePessimisticLock1
 ArticleLikeService.unlikePessimisticLock2
@@ -184,9 +187,11 @@ articleLikeRepository.findByArticleIdAndUserId(articleId, userId)
 이러한 반환 값이 0이라면, 이미 다른 요청에 의해 데이터가 삭제 되었음을 의미합니다.
 이 경우 예외를 발생시켜서 decrease 중복 수행을 방지할 수 있습니다.
 ```
+
 )
 
 [//]: # ()
+
 ```
 ✅ 1. @Lock(LockModeType.PESSIMISTIC_FORCE_INCREMENT)
 🔍 역할
@@ -229,6 +234,7 @@ SELECT * FROM article_like_count WHERE article_id = ? FOR UPDATE
 ```
 
 [//]: # ()
+
 ```
 ✅ 2. @Modifying
 🔍 역할
@@ -242,8 +248,209 @@ Spring Data JPA는 기본적으로 SELECT 쿼리로 추정 →
 int는 영향을 받은 row 수를 반환
 ```
 
-
 [//]: # (조회수 어뷰징 방지: 분산락 Distributed Lock)
+
 ```
 
+```
+
+[//]: # (TODO:: )
+
+```
+좋은 질문입니다. 현재 MessageRelay._publishEvent()에서는 Kafka 전송 성공 여부에 따라 아무런 후속 처리 없이 try-catch만 하고 있습니다.
+Kafka 전송 결과에 따라 Outbox 테이블의 상태를 성공/실패로 업데이트하려면 다음과 같이 코드를 보완하시면 됩니다.
+
+✅ 1. Outbox 엔티티에 상태 필드 추가
+java
+복사
+편집
+public enum OutboxStatus {
+    PENDING,
+    SENT,
+    FAILED
+}
+java
+복사
+편집
+@Entity
+public class Outbox {
+    @Id
+    private Long id;
+
+    @Enumerated(EnumType.STRING)
+    private OutboxStatus status;
+
+    private LocalDateTime createdAt;
+    private Long shardKey;
+    private String payload;
+    private String eventType;
+
+    // 기타 필드 및 getter/setter
+}
+✅ 2. 전송 성공/실패에 따라 상태 업데이트
+아래처럼 _publishEvent() 내부에서 전송 성공 시 SENT, 실패 시 FAILED로 업데이트하도록 수정합니다.
+
+java
+복사
+편집
+private void _publishEvent(Outbox outbox) {
+    try {
+        messageRelayKafkaTemplate.send(
+                outbox.getEventType().getTopic(),
+                String.valueOf(outbox.getShardKey()),
+                outbox.getPayload()
+        ).get(1, TimeUnit.SECONDS);
+
+        // 성공 처리
+        outbox.setStatus(OutboxStatus.SENT);
+        outBoxRepository.save(outbox);
+
+        log.info("[MessageRelay._publishEvent] Kafka 전송 성공. id={}, topic={}", outbox.getId(), outbox.getEventType().getTopic());
+
+    } catch (Exception e) {
+        log.error("[MessageRelay._publishEvent] Kafka 전송 실패. outbox={}", outbox, e);
+
+        // 실패 처리
+        outbox.setStatus(OutboxStatus.FAILED);
+        outBoxRepository.save(outbox);
+    }
+}
+✅ 3. PENDING 상태만 조회하도록 쿼리 제한
+OutboxRepository 쿼리 메소드도 아래처럼 status = PENDING 조건을 추가해야 중복 전송을 막을 수 있습니다.
+
+java
+복사
+편집
+List<Outbox> findAllByShardKeyAndStatusAndCreatedAtLessThanEqualOrderByCreatedAtAsc(
+    Long shardKey,
+    OutboxStatus status,
+    LocalDateTime createdAt,
+    Pageable pageable
+);
+→ 호출부에서 아래처럼 사용:
+
+java
+복사
+편집
+List<Outbox> outboxList = outBoxRepository.findAllByShardKeyAndStatusAndCreatedAtLessThanEqualOrderByCreatedAtAsc(
+    shard,
+    OutboxStatus.PENDING,
+    LocalDateTime.now().minusSeconds(10),
+    Pageable.ofSize(100)
+);
+🔁 보너스: 실패건 재시도 처리 방식 (선택)
+FAILED 상태의 이벤트를 특정 횟수만큼 재시도하거나, 별도 관리하여 보정할 수도 있습니다.
+
+예:
+
+상태를 FAILED로 바꿨다가 운영자가 확인 후 재시도
+
+실패 횟수를 따로 컬럼으로 둬서 자동 재시도 로직 구성
+
+
+✅ 1. Outbox 엔티티 확장
+java
+복사
+편집
+@Entity
+public class Outbox {
+
+    @Id
+    private Long id;
+
+    @Enumerated(EnumType.STRING)
+    private OutboxStatus status; // PENDING, SENT, FAILED
+
+    private int retryCount; // 실패 횟수 기록
+
+    private int maxRetryCount = 5; // 최대 재시도 횟수 (기본값 5)
+
+    private LocalDateTime nextRetryAt; // 다음 재시도 가능 시간
+
+    private LocalDateTime createdAt;
+
+    private Long shardKey;
+
+    private String payload;
+
+    @Enumerated(EnumType.STRING)
+    private EventType eventType;
+
+    // ... 기타 필드 및 getter/setter
+}
+✅ 2. 실패 시 retryCount 증가 및 nextRetryAt 설정
+java
+복사
+편집
+private void _publishEvent(Outbox outbox) {
+    try {
+        messageRelayKafkaTemplate.send(
+                outbox.getEventType().getTopic(),
+                String.valueOf(outbox.getShardKey()),
+                outbox.getPayload()
+        ).get(1, TimeUnit.SECONDS);
+
+        outbox.setStatus(OutboxStatus.SENT);
+        outBoxRepository.save(outbox);
+
+    } catch (Exception e) {
+        log.error("[_publishEvent] Kafka 전송 실패: {}", outbox, e);
+
+        outbox.setRetryCount(outbox.getRetryCount() + 1);
+
+        if (outbox.getRetryCount() >= outbox.getMaxRetryCount()) {
+            outbox.setStatus(OutboxStatus.FAILED); // 최종 실패
+        } else {
+            outbox.setStatus(OutboxStatus.PENDING); // 재시도 대상 유지
+            outbox.setNextRetryAt(LocalDateTime.now().plusSeconds(30)); // 30초 후 재시도
+        }
+
+        outBoxRepository.save(outbox);
+    }
+}
+✅ 3. PENDING + 재시도 조건 만족하는 이벤트만 조회
+java
+복사
+편집
+List<Outbox> findAllByShardKeyAndStatusAndNextRetryAtLessThanEqualOrderByCreatedAtAsc(
+    Long shardKey,
+    OutboxStatus status,
+    LocalDateTime now,
+    Pageable pageable
+);
+호출부:
+
+java
+복사
+편집
+List<Outbox> outboxList = outBoxRepository.findAllByShardKeyAndStatusAndNextRetryAtLessThanEqualOrderByCreatedAtAsc(
+    shard,
+    OutboxStatus.PENDING,
+    LocalDateTime.now(),
+    Pageable.ofSize(100)
+);
+✅ 4. 수동 재처리 (운영자 기능)
+운영자가 Outbox 테이블을 조회하여 상태가 FAILED인 항목을 선택적으로 PENDING으로 변경 + retryCount 초기화해서 재시도할 수 있습니다.
+
+예: 운영자 API
+
+java
+복사
+편집
+@PostMapping("/admin/outbox/{id}/retry")
+public void retryFailedOutbox(@PathVariable Long id) {
+    Outbox outbox = outBoxRepository.findById(id)
+        .orElseThrow(() -> new RuntimeException("Outbox not found"));
+
+    if (outbox.getStatus() == OutboxStatus.FAILED) {
+        outbox.setStatus(OutboxStatus.PENDING);
+        outbox.setRetryCount(0);
+        outbox.setNextRetryAt(LocalDateTime.now());
+        outBoxRepository.save(outbox);
+    }
+}
+✅ 보너스: 실패 로그와 dead-letter queue
+재시도 실패한 메시지는 Kafka Dead Letter Topic(DLT)으로 보내거나
+
+별도 실패 테이블(outbox_fail_log)에 기록하여 감사성 추적을 할 수 있습니다.
 ```

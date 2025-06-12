@@ -78,6 +78,5 @@ public class MessageRelay {
                 _publishEvent(outbox);
             }
         }
-
     }
 }

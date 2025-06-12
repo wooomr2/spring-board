@@ -20,7 +20,7 @@ import java.util.Objects;
 public class HotArticleService {
 
     private final ArticleClient articleClient;
-    private final List<EventHandler<EventPayload>> eventHandlers;
+    private final List<EventHandler> eventHandlers;
     private final HotArticleScoreUpdater hotArticleScoreUpdater;
     private final HotArticleScoreCalculator hotArticleScoreCalculator;
     private final HotArticleListRepository hotArticleListRepository;
