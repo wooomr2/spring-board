@@ -23,7 +23,6 @@ public class ArticleClient {
 
     @PostConstruct
     private void init() {
-        log.info("[ArticleClient.init] Initializing ArticleClient with URL={}", endpointServiceUrl);
         this.restClient = RestClient.builder()
                 .baseUrl(endpointServiceUrl)
                 .build();

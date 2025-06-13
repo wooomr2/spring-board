@@ -19,7 +19,6 @@ public class CommentClient {
 
     @PostConstruct
     public void init() {
-        log.info("[CommentClient.init] Initializing CommentClient with URL={}", endpointServiceUrl);
         this.restClient = RestClient.builder()
                 .baseUrl(endpointServiceUrl)
                 .build();

@@ -19,7 +19,6 @@ public class ViewClient {
 
     @PostConstruct
     public void init() {
-        log.info("[ViewClient.init] Initializing ViewClient with URL={}", endpointServiceUrl);
         this.restClient = RestClient.builder()
                 .baseUrl(endpointServiceUrl)
                 .build();

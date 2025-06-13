@@ -19,7 +19,6 @@ public class LikeClient {
 
     @PostConstruct
     public void init() {
-        log.info("[LikeClient.init] Initializing LikeClient with URL={}", endpointServiceUrl);
         this.restClient = RestClient.builder()
                 .baseUrl(endpointServiceUrl)
                 .build();
