@@ -49,7 +49,7 @@ public class ArticleQueryModel {
         return model;
     }
 
-    public void updatedBy(ArticleUpdatedEventPayload payload) {
+    public void updateBy(ArticleUpdatedEventPayload payload) {
         this.title = payload.getTitle();
         this.content = payload.getContent();
         this.boardId = payload.getBoardId();
@@ -58,19 +58,19 @@ public class ArticleQueryModel {
         this.modifiedAt = payload.getModifiedAt();
     }
 
-    public void updatedBy(CommentCreatedEventPayload payload) {
+    public void updateBy(CommentCreatedEventPayload payload) {
         this.articleCommentCount = payload.getArticleCommentCount();
     }
 
-    public void updatedBy(CommentDeletedEventPayload payload) {
+    public void updateBy(CommentDeletedEventPayload payload) {
         this.articleCommentCount = payload.getArticleCommentCount();
     }
 
-    public void updatedBy(ArticleLikedEventPayload payload) {
+    public void updateBy(ArticleLikedEventPayload payload) {
         this.articleLikeCount = payload.getArticleLkieCount();
     }
 
-    public void updatedBy(ArticleUnLikedEventPayload payload) {
+    public void updateBy(ArticleUnLikedEventPayload payload) {
         this.articleLikeCount = payload.getArticleLkieCount();
     }
 }

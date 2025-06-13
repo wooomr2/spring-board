@@ -19,7 +19,7 @@ public class CommentCreatedEventHandler implements EventHandler<CommentCreatedEv
 
         articleQueryModelRepository.read(payload.getArticleId())
                 .ifPresent(articleQueryModel -> {
-                    articleQueryModel.updatedBy(payload);
+                    articleQueryModel.updateBy(payload);
                     articleQueryModelRepository.update(articleQueryModel);
                 });
     }
