@@ -4,6 +4,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -24,7 +25,15 @@ public class ViewClient {
                 .build();
     }
 
+    /**
+     * 1. RedisCache에서 데이터 조회
+     * 2. 레디스에 데이터가 없다면, count 메소드 호출 원본데이터 요청
+     * 3. count 메소드에서 조회된 데이터를 레디스에 저장
+     */
+    @Cacheable(key = "#articleId", value = "articleViewCount")
     public long count(Long articleId) {
+        log.info("[ViewClient.count] articleId={}", articleId);
+
         try {
             Long count = restClient.get()
                     .uri("/v1/article-views/articles/{articleId}/count", articleId)
