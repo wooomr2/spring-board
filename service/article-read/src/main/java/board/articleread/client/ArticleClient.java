@@ -1,4 +1,4 @@
-package board.hotarticle.client;
+package board.articleread.client;
 
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
@@ -9,37 +9,49 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class ArticleClient {
+
     private RestClient restClient;
 
     @Value("${endpoints.board-article-service.url}")
-    private String articleServiceUrl;
+    private String endpointServiceUrl;
 
     @PostConstruct
     private void init() {
-        restClient = RestClient.create(articleServiceUrl);
+        log.info("[ArticleClient.init] Initializing ArticleClient with URL={}", endpointServiceUrl);
+        this.restClient = RestClient.builder()
+                .baseUrl(endpointServiceUrl)
+                .build();
     }
 
-    public ArticleResponse read(Long articleId) {
+    public Optional<ArticleResponse> read(Long articleId) {
         try {
-            return restClient.get()
+            ArticleResponse response = restClient.get()
                     .uri("/v1/articles/{articleId}", articleId)
                     .retrieve()
                     .body(ArticleResponse.class);
+
+            return Optional.ofNullable(response);
         } catch (Exception e) {
-            log.error("[ArticleClient.read]: articleId={}", articleId, e);
+            log.error("[ArticleClient.read] articleId={}", articleId, e);
         }
-        return null;
+
+        return Optional.empty();
     }
 
     @Getter
     public static class ArticleResponse {
-        private Long articleId;
+        private Long artilceId;
         private String title;
+        private String content;
+        private Long boardId;
+        private Long writerId;
         private LocalDateTime createdAt;
+        private LocalDateTime modifiedAt;
     }
 }
