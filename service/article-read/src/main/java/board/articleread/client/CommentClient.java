@@ -38,6 +38,4 @@ public class CommentClient {
 
         return 0L;
     }
-
-
 }

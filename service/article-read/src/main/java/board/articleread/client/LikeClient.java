@@ -38,6 +38,4 @@ public class LikeClient {
 
         return 0L;
     }
-
-
 }

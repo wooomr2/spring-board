@@ -47,6 +47,4 @@ public class ViewClient {
 
         return 0L;
     }
-
-
 }
