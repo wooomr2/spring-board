@@ -1,4 +1,4 @@
-package board.article.learning;
+package board.articleread.learning;
 
 import org.junit.jupiter.api.Test;
 
