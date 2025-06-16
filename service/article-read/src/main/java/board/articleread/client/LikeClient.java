@@ -34,8 +34,8 @@ public class LikeClient {
             return count != null ? count : 0L;
         } catch (Exception e) {
             log.error("[LikeClient.count] articleId={}", articleId, e);
+            return 0L;
         }
 
-        return 0L;
     }
 }

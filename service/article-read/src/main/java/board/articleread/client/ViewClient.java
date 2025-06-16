@@ -43,8 +43,7 @@ public class ViewClient {
             return count != null ? count : 0L;
         } catch (Exception e) {
             log.error("[ViewClient.count] articleId={}", articleId, e);
+            return 0L;
         }
-
-        return 0L;
     }
 }

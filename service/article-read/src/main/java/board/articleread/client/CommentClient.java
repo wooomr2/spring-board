@@ -34,8 +34,8 @@ public class CommentClient {
             return count != null ? count : 0L;
         } catch (Exception e) {
             log.error("[CommentClient.count] articleId={}", articleId, e);
+            return 0L;
         }
 
-        return 0L;
     }
 }

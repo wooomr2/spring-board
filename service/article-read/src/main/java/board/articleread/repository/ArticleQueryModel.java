@@ -37,7 +37,7 @@ public class ArticleQueryModel {
 
     public static ArticleQueryModel create(ArticleClient.ArticleResponse response, Long commentCount, Long likeCount) {
         ArticleQueryModel model = new ArticleQueryModel();
-        model.articleId = response.getArtilceId();
+        model.articleId = response.getArticleId();
         model.title = response.getTitle();
         model.content = response.getContent();
         model.boardId = response.getBoardId();

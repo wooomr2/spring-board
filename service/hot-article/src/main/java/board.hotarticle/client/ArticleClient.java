@@ -32,8 +32,8 @@ public class ArticleClient {
                     .body(ArticleResponse.class);
         } catch (Exception e) {
             log.error("[ArticleClient.read]: articleId={}", articleId, e);
+            return null;
         }
-        return null;
     }
 
     @Getter
