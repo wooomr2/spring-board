@@ -49,7 +49,7 @@ public class ArticleClient {
     public ArticlePageResponse readAll(Long boardId, Long page, Long pageSize) {
         try {
             return restClient.get()
-                    .uri("/v1/articles?baordId=%s&page=%s&pageSize=%s".formatted(boardId, page, pageSize))
+                    .uri("/v1/articles?boardId=%s&page=%s&pageSize=%s".formatted(boardId, page, pageSize))
                     .retrieve()
                     .body(ArticlePageResponse.class);
         } catch (Exception e) {
