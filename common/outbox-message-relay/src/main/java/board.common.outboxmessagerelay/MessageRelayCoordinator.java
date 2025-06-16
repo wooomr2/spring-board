@@ -65,6 +65,4 @@ public class MessageRelayCoordinator {
     public void leave() {
         redisTemplate.opsForZSet().remove(generateKey(), APP_ID);
     }
-
-
 }

@@ -16,13 +16,12 @@ import static board.common.dataserializer.DataSerializer.serialize;
 @RequiredArgsConstructor
 public class ArticleQueryModelRepository {
 
-    private final StringRedisTemplate stringRedisTemplate;
+    private final StringRedisTemplate redisTemplate;
 
     /**
      * key - article-read::article::{articleId}
      */
     private static final String KEY_FORMAT = "article-read::article::%s";
-    private final RedisTemplate<Object, Object> redisTemplate;
 
     private String generateKey(ArticleQueryModel articleQueryModel) {
         return generateKey(articleQueryModel.getArticleId());
